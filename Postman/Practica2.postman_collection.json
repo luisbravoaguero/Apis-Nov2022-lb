@@ -1,0 +1,457 @@
+{
+	"info": {
+		"_postman_id": "511c3e12-b96e-4271-b182-67377e349b3f",
+		"name": "Practica 2",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "7035805"
+	},
+	"item": [
+		{
+			"name": "get /ListaDeUsuarios - 200",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//prueba para validar codigo de respuesta\r",
+							"pm.test(\"Validar que el codigo de respuesta es un 200\", function(){\r",
+							"    pm.expect(pm.response.code).to.eql(200)\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Validar que el status code response es 200\", function(){\r",
+							"    pm.response.to.have.status(200)\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Validar que el status code response es igual a OK\", ()=>{\r",
+							"    pm.response.to.have.status(\"OK\")\r",
+							"});\r",
+							"pm.test(\"Check the active environment\", () => {\r",
+							"  pm.expect(pm.environment.name).to.eql(\"Practica2-Environment\");\r",
+							"});\r",
+							"//video Rec 0057\r",
+							"//minuto 1:40:00\r",
+							"const responseJson = pm.response.json();\r",
+							"//console.log(responseJson.data.length);\r",
+							"pm.test(\"Validar que el array de datos contenga 6 Json\", () => {\r",
+							"   pm.expect(responseJson.data).to.have.lengthOf(6);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Validar que el campo id sea un numero\", () => {\r",
+							"\r",
+							"   pm.expect(typeof(responseJson.data[0].id)).to.equal(\"number\");\r",
+							"});\r",
+							"pm.test(\"Validar que el camp email sea string\", () => {\r",
+							"   pm.expect(responseJson.data[0].email).to.be.a(\"String\")\r",
+							"});\r",
+							"pm.test(\"Validar que el campo avatar no sea indefinido\", () => {\r",
+							"   pm.expect(responseJson.data[0].avatar).to.not.be.a(\"undefined\");\r",
+							"   pm.expect(responseJson.data[0].avatar).to.not.be.undefined;\r",
+							"});\r",
+							"pm.test(\"Validar que el body de la respuesta no este vacio\",()=>{\r",
+							"    pm.expect(responseJson).to.not.null;\r",
+							"});\r",
+							"pm.test(\"Validar que el tiempo de respuesta se menor a 1 segundo\",()=>{\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"pm.test(\"Validar que el segundo item ID sea mayor a 1 \",()=>{\r",
+							"    pm.expect(responseJson.data[2].id).to.be.above(1, 'nooo why fail??');\r",
+							"});\r",
+							"pm.test(\"Validar que al menos se muestren 2 item por pagina \",()=>{\r",
+							"    pm.expect(responseJson.per_page).to.be.at.least(2);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Validar el tamaño de la respuesta\",()=>{\r",
+							"    var sizeT=responseJson.length;\r",
+							"    pm.expect(sizeT).to.be.equal(3233);\r",
+							"});\r",
+							"pm.test(\"Object is contained\", () => {\r",
+							"  const expectedObject = {\r",
+							"    \"id\": 1,\r",
+							"    \"email\": \"george.bluth@reqres.in\",\r",
+							"    \"first_name\": \"George\",\r",
+							"    \"last_name\": \"Bluth\",\r",
+							"    \"avatar\": \"https://reqres.in/img/faces/1-image.jpg\"\r",
+							"  };\r",
+							"  pm.expect(responseJson.data[0]).to.deep.include(expectedObject)\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var randomNumberPage = Math.floor((Math.random() * 3) + 1);\r",
+							"console.log(randomNumberPage);\r",
+							"pm.environment.set(\"NumberPage\",randomNumberPage);\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://{{url-base-p2}}/users?page={{NumberPage}}",
+					"protocol": "https",
+					"host": [
+						"{{url-base-p2}}"
+					],
+					"path": [
+						"users"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "{{NumberPage}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get /LeerUsuarioConID - 200",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//prueba para validar codigo de respuesta\r",
+							"pm.test(\"Validar que el codigo de respuesta es un 200\", function(){\r",
+							"    pm.expect(pm.response.code).to.eql(200)\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Validar que el status code response es 200\", function(){\r",
+							"    pm.response.to.have.status(200)\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Validar que el status code response es igual a OK\", ()=>{\r",
+							"    pm.response.to.have.status(\"OK\")\r",
+							"});\r",
+							"const jsonResponse = pm.response.json();\r",
+							"console.log(typeof pm.response.json().data.email);\r",
+							"\r",
+							"pm.test(\"Validar que el tipo de dato de los campos data\", ()=>{\r",
+							"    pm.expect(typeof jsonResponse.data.id).to.equal(\"number\")\r",
+							"    pm.expect(typeof jsonResponse.data.email).to.equal(\"string\")\r",
+							"    pm.expect(typeof jsonResponse.data.first_name).to.equal(\"string\")\r",
+							"    pm.expect(typeof jsonResponse.data.last_name).to.equal(\"string\")\r",
+							"    pm.expect(typeof jsonResponse.data.avatar).to.equal(\"string\")\r",
+							"});\r",
+							"\r",
+							"console.log(pm.response.json());\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://{{url-base-p2}}/users/2",
+					"protocol": "https",
+					"host": [
+						"{{url-base-p2}}"
+					],
+					"path": [
+						"users",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "post /CrearUsuario - 201",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//prueba para validar codigo de respuesta\r",
+							"pm.test(\"Validar que el codigo de respuesta es un 201\", function(){\r",
+							"    pm.expect(pm.response.code).to.eql(201)\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Validar que el response sea Created\", function(){\r",
+							"    pm.response.to.have.status(\"Created\")\r",
+							"});\r",
+							"\r",
+							"var userIdLocal = pm.response.json().id;\r",
+							"pm.environment.set(\"userId\",userIdLocal);\r",
+							"\r",
+							"//guarda toda la informacion en formato json\r",
+							"const jsonResponse = pm.response.json();\r",
+							"console.log(jsonResponse);\r",
+							"\r",
+							"pm.test(\"Validar la longitud del campo createdAt sea 24\",()=>{\r",
+							"    pm.expect(jsonResponse.createdAt).to.have.lengthOf(24)\r",
+							"});\r",
+							"console.log(jsonResponse.createdAt);\r",
+							"pm.test(\"Validar que el tipo de dato del campo createdAt sea fecha\",()=>{\r",
+							"    var moment = require ('moment');\r",
+							"   pm.expect(jsonResponse.createdAt).to.include(moment(jsonResponse.createdAt).format('YYYY-MM-DDTHH:mm:ss:sssZ'));\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"//aqui se setean los datos antes de realizar las pruebas\r",
+							"var name = pm.variables.replaceIn(\"{{$randomFullName}}\");\r",
+							"pm.environment.set(\"nombre\",name);\r",
+							"var jobType = pm.variables.replaceIn(\"{{$randomJobType}}\");\r",
+							"pm.environment.set(\"job\",jobType);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"{{nombre}}\",\r\n    \"job\": \"{{job}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{url-base-p2}}/users",
+					"protocol": "https",
+					"host": [
+						"{{url-base-p2}}"
+					],
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get /LeerUsuarioCreado - 404",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//prueba para validar codigo de respuesta\r",
+							"pm.test(\"Validar que el codigo de respuesta este entre 200, 201 y 404\", ()=>{\r",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 404])\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Validar que el status response este entre OK o Created o Not Found\", ()=>{\r",
+							"    pm.expect(pm.response.status).to.be.oneOf([\"OK\", \"Created\", \"Not Found\"])\r",
+							"});\r",
+							"pm.test(\"Vericar que el response sea igual a {}\", () => {\r",
+							"    pm.expect(pm.response.text()).to.eql('{}')\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Validar que el tiempo de repuesta sea menor a 1 segundo\",()=>{\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://{{url-base-p2}}/users/{{userId}}",
+					"protocol": "https",
+					"host": [
+						"{{url-base-p2}}"
+					],
+					"path": [
+						"users",
+						"{{userId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "put / EditarUsuarioCreado - 200",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//prueba para validar codigo de respuesta\r",
+							"pm.test(\"Validar que el codigo de respuesta es un 200\", function(){\r",
+							"    pm.expect(pm.response.code).to.eql(200)\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Validar que el status code response es igual a OK\", ()=>{\r",
+							"    pm.response.to.have.status(\"OK\")\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Validar que el response contenga name, job y updatedAt keys\", ()=>{\r",
+							"    pm.expect(pm.response.json()).to.include.all.keys(\"name\",\"job\",\"updatedAt\")\r",
+							"});\r",
+							"\r",
+							"var bodyRequest = JSON.parse(pm.request.body.raw)\r",
+							"pm.test(\"Validar que el response name y job contenga los mismos datos que se le envió\", ()=>{\r",
+							"    pm.expect(bodyRequest.name).to.eql(pm.response.json().name)\r",
+							"    pm.expect(bodyRequest.job).to.eql(pm.response.json().job)\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"luis\",\r\n    \"job\": \"leader\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{url-base-p2}}/users/{{userId}}",
+					"protocol": "https",
+					"host": [
+						"{{url-base-p2}}"
+					],
+					"path": [
+						"users",
+						"{{userId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "delete /BorraUsuarioCreado - 204",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//prueba para validar codigo de respuesta\r",
+							"pm.test(\"Validar que el codigo de respuesta es un 204\", ()=>{\r",
+							"    pm.expect(pm.response.code).to.eql(204)\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Validar que el status code response es igual a OK\", ()=>{\r",
+							"    pm.response.to.have.status(\"No Content\")\r",
+							"});\r",
+							"//se acerca mas a la respuesta que busco\r",
+							"pm.test(\"Validar que el reponse.text() este vació\", () => {\r",
+							"    pm.expect(pm.response.text()).to.eql(\"\");\r",
+							"});\r",
+							"//este tambien puede ser\r",
+							"pm.test(\"Validar que el reponse no sea null o undefined\", () => {\r",
+							"    pm.expect(pm.response).is.not.oneOf([null, undefined]);\r",
+							"});\r",
+							"\r",
+							"var booleanResponse = pm.response != \"\";\r",
+							"pm.test(\"Validar que el reponse no sea vacio usando .be.true\", () => {\r",
+							"    pm.expect(booleanResponse).be.true;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Validar que el reponse no sea nulo, usando to.not.null\", () => {\r",
+							"    pm.expect(pm.response).to.not.null;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Validar que el reponse no este vacio, usando empty\", () => {\r",
+							"    pm.expect(pm.response).to.not.empty;\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "https://{{url-base-p2}}/users/{{userId}}",
+					"protocol": "https",
+					"host": [
+						"{{url-base-p2}}"
+					],
+					"path": [
+						"users",
+						"{{userId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "post /CrearRegistro - 200",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//prueba para validar codigo de respuesta\r",
+							"pm.test(\"Validar que el codigo de respuesta es un 200\", function(){\r",
+							"    pm.expect(pm.response.code).to.eql(200)\r",
+							"});\r",
+							"pm.test(\"Validar que el status response es igual a OK\", ()=>{\r",
+							"    pm.response.to.have.status(\"OK\")\r",
+							"});\r",
+							"pm.test(\"Validar que el tiempo de respuesta se menor a 1 segundo\",()=>{\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Validar que la respuesta incluya id y token keys\",()=>{\r",
+							"    pm.expect(pm.response.json()).to.have.keys([\"id\",\"token\"]);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\": \"eve.holt@reqres.in\",\r\n    \"password\": \"newpassword\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{url-base-p2}}/register",
+					"protocol": "https",
+					"host": [
+						"{{url-base-p2}}"
+					],
+					"path": [
+						"register"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
