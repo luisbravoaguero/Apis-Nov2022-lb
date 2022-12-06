@@ -2,7 +2,9 @@ import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.RestAssured;
+import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
+import jdk.jfr.Name;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -13,6 +15,38 @@ import static org.junit.jupiter.api.Assertions.*;
 public class eCommerce {
     static private String url_base = "webapi.segundamano.mx";
     //https://webapi.segundamano.mx/urls/v1/public/ad-listing?lang=es
+    static private String email = "ventas-lmba1@mailinator.com";
+    static private String password = "ventas-lmba1";
+    static private String account_id = "";
+    static private String access_token = "";
+    static private String uuid = "";
+    static private String add_id = "";
+
+    @Name("Obtener Token")
+    private String obtenerToken(){
+        RestAssured.baseURI = String.format("https://%s/nga/api/v1.1/private/accounts",url_base);
+
+        String body_request = "{\"account\":{\"email\":\""+email+"\"}}";
+        Response response = given().log().all()
+                .filter(new AllureRestAssured())
+                .contentType("application/json")
+                .auth().preemptive().basic(email, password)
+                .queryParam("lang","es")
+                .body(body_request)
+                .post();
+        String body_response = response.getBody().prettyPrint();
+        System.out.println("Response del Token: "+body_response);
+
+        JsonPath jsonResponse = response.jsonPath();
+        access_token = jsonResponse.get("access_token");
+        System.out.println("Token: "+ access_token);
+        account_id = jsonResponse.get("account.account_id");
+        System.out.println("Access ID: "+account_id);
+
+        uuid = jsonResponse.get("account.uuid");
+        System.out.println("UUID: "+uuid);
+        return access_token;
+    }
 
     @Test
     @Order(1)
@@ -98,6 +132,99 @@ public class eCommerce {
         System.out.println("Response: "+body_response);
 
     }
+    @Test
+    @Order(3)
+    @Severity(SeverityLevel.NORMAL)
+    @DisplayName("Test case: Crear usuario")
+    public void CrearUsuario401(){
+        RestAssured.baseURI = String.format("https://%s/nga/api/v1.1/private/accounts",url_base);
+        String new_user = "agente_ventas_test" + (Math.floor(Math.random()*6789)) + "@mailinator.com";
+        String new_password = "12345";
+        String body_request = "{\"account\":{\"email\":\""+new_user+"\"}}";
+        Response response = given().log().all()
+                .filter(new AllureRestAssured())
+                .contentType("application/json")
+                .auth().preemptive().basic(new_user, new_password)
+                .queryParam("lang","es")
+                .body(body_request)
+                .post();
+
+        assertEquals(401,response.getStatusCode());
+        long tiempo = response.getTime();
+        assertTrue(tiempo<2000);
+    }
 
 
+    @Test
+    @Order(4)
+    @Severity(SeverityLevel.CRITICAL)
+    @DisplayName("Test case: Obtener informacion del usuario")
+    public void obtenerInfoUsuario200(){
+        RestAssured.baseURI = String.format("https://%s/nga/api/v1.1/private/accounts",url_base);
+
+        String body_request = "{\"account\":{\"email\":\""+email+"\"}}";
+        Response response = given().log().all()
+                .filter(new AllureRestAssured())
+                .contentType("application/json")
+                .auth().preemptive().basic(email, password)
+                .queryParam("lang","es")
+                .body(body_request)
+                .post();
+        String body_response = response.getBody().prettyPrint();
+        assertEquals(200,response.getStatusCode());
+        long tiempo = response.getTime();
+        assertTrue(body_response.contains("account_id"));
+        //assertTrue(tiempo<00);
+
+        JsonPath jsonResponse = response.jsonPath();
+
+        access_token = jsonResponse.get("access_token");
+        System.out.println("Token: "+ access_token);
+
+        account_id = jsonResponse.get("account.account_id");
+        System.out.println("Access ID: "+account_id);
+
+        uuid = jsonResponse.get("account.uuid");
+        System.out.println("UUID: "+uuid);
+    }
+
+    @Test
+    @Order(5)
+    @Severity(SeverityLevel.CRITICAL)
+    @DisplayName("Test case: Crear anuncio")
+    public void crearUnAnuncio200(){
+
+        //uuid = unique user id
+        String token = obtenerToken();
+        System.out.println("Token en la prueba crear anuncio: "+token);
+
+
+        String body_request = "{\n" +
+                "    \"images\": \"2240792730.jpg\",\n" +
+                "    \"category\": \"4100\",\n" +
+                "    \"subject\": \"Compra y venta e intercambioventa e intercambio\",\n" +
+                "    \"body\": \"Compra y venta e intercambioventa e intercambioCompra\",\n" +
+                "    \"is_new\": \"0\",\n" +
+                "    \"region\": \"12\",\n" +
+                "    \"municipality\": \"312\",\n" +
+                "    \"area\": \"8842\",\n" +
+                "    \"price\": \"155\",\n" +
+                "    \"phone_hidden\": \"true\",\n" +
+                "    \"show_phone\": \"false\",\n" +
+                "    \"contact_phone\": \"807-441-5132\"\n" +
+                "}";
+        RestAssured.baseURI = String.format("https://%s/v2/accounts/%s/up",url_base,uuid);
+        Response response = given().log().all()
+                .header("x-source","PHOENIX_DESKTOP")
+                .header("Accept","*/*")
+                .header("Content-Type","application/json")
+                .auth().preemptive().basic(uuid, token)
+                .body(body_request)
+                .post();
+        String body_response = response.getBody().prettyPrint();
+
+        JsonPath jsonResponse = response.jsonPath();
+        //add_id = jsonResponse.get("data.ad.ad_id");
+
+    }
 }
