@@ -3,9 +3,15 @@ import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.RestAssured;
+import io.restassured.http.Header;
+import io.restassured.http.Headers;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
+import org.apache.http.StatusLine;
 import org.junit.jupiter.api.*;
+import org.apache.http.HttpStatus;
+import java.util.ArrayList;
+import java.util.Map;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,7 +29,7 @@ public class eCommerceTarea {
     static private String account_id_solo = "";
     static private String addressID = "";
     static private String alertID = "";
-
+    StatusLine statusLine;
     @Test
     @Order(1)
     @Severity(SeverityLevel.MINOR)
@@ -54,38 +60,91 @@ public class eCommerceTarea {
                 "        }\n" +
                 "    ]\n" +
                 "}";
-        Response response = given().log().all()
-                .filter(new AllureRestAssured())
-                .queryParam("lang", "es")
-                .contentType("application/json")
-                .headers("Accept", "application/json, text/plain, */*")
-                .body(body_request)
-                .post("/ad-listing");
+        Response response =
+                given()
+                        .log()
+                        .all()
+                        .filter(new AllureRestAssured())
+                        .queryParam("lang", "es")
+                        .contentType("application/json")
+                        .headers("Accept", "application/json, text/plain, */*")
+                        .body(body_request)
+                        .post("/ad-listing");
 
 
         String body_response = response.getBody().prettyPrint();
         System.out.println("Response: " + body_response);
 
-        //Junit 5 - Pruebas
-        System.out.println("Status response: " + response.getStatusCode());
-        assertEquals(200, response.getStatusCode());
+        System.out.println("--------------------Tests---------------------");
 
-        //VALIDAR EL BODY REPONSE NO VENGA VACIO
+        System.out.print("Validar que el codigo de respuesta sea igual a 200: "+ response.getStatusCode());
+        //Evaluando el codigo de respuesta, usando  HttpStatus.
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        System.out.println(" Passed");
+
+        System.out.print("Validar que el estado de la respuesta sea igual a OK: "+ response.getStatusLine());
+        assertTrue(response.getStatusLine().contains("OK"));
+        System.out.println(" Passed");
+
+        long timeResponse = response.getTime();
+        System.out.print("Validar que el tiempo de respuesta sea menor a 3 segundo: "+ timeResponse);
+        assertTrue(timeResponse < 3000);
+        System.out.println(" Passed");
+
+        System.out.print("Validar que el body response no venga vacio: ");
         assertNotNull(body_response);
+        System.out.println(" Passed");
 
-        //vValidar que el body response contenga algunos campos
+        System.out.print("Validar que el key Precio Resquest sea igual al Precio Response: ");
+        //Instancia para convertir body_request string a json y obtener el valor de un campo
+        JsonPath jsonObject = new JsonPath(body_request);
+        //Instancia para obtener el response
+        JsonPath jsonBodyResponse = response.jsonPath();
+        //Almacenando los valores del campo data.urls de tipo ArrayList
+        ArrayList<String> dataUrlsValue = jsonBodyResponse.get("data.urls");
+        //Almancenando el resultado como booleano, preguntamos si el valor 600000 existe en el body_request y en el body_response
+        boolean bodyRequestPriceField = jsonObject.getJsonObject("filters[0].price").toString().contains("60000");
+        boolean bodyResponsePriceField = dataUrlsValue.get(0).contains("60000");
+        //Evaluando la prueba mediante assertEquals
+        assertEquals(bodyRequestPriceField, bodyResponsePriceField);
+        System.out.println(" Passed");
+
+        System.out.print("Validar que el body response contenga algunos campos: ");
         assertTrue(body_response.contains("data"));
         assertTrue(body_response.contains("url"));
+        System.out.println(" Passed");
 
-        System.out.println("Tiempo de respuesta: " + response.getTime());
-        long tiempo = response.getTime();
-        assertTrue(tiempo < 2000);
+        System.out.print("Validar que el header response contenga el key Content-Type: ");
+        String headers_response = response.getHeaders().toString();
+        assertTrue(headers_response.contains("Content-Type"));
+        System.out.println(" Passed");
 
-        String headers_reponse = response.getHeaders().toString();
-        assertTrue(headers_reponse.contains("Content-Type"));
-        //System.out.println("1er Header: "+response.getHeader("Accept"));
-        System.out.println("2do Header: " + response.getHeaders());
+        System.out.print("Validar que el Content-Type header response key contenga el valor [application/json]: ");
+        String value_headers_response = response.getHeaders().getValue("Content-Type");
+        assertTrue(value_headers_response.contains("application/json"));
+        //El siguiente codigo obtiene los headers, pero no lo uso porque se lista header que no declaré
+        /*Headers allHeaders = response.getHeaders();
+        for(Header header : allHeaders) {
+            if(header.getValue() == allHeaders.getValue("Content-Type")){
+            //System.out.print(header.getName() +" : ");
+            System.out.print(header.getValue());
+            }
+        }*/
+        System.out.println(" Passed");
 
+        System.out.print("Validar que el campo urls contenga el valor 60000 en la respuesta: ");
+        JsonPath jsonResp = response.jsonPath();
+        //Almancenando los valores de data.urls como ArrayList
+        ArrayList<String> dataUrlsValues = jsonResp.get("data.urls");
+        //Evaluando el primer item del ArrayList
+        assertTrue(dataUrlsValues.get(0).contains("60000"));
+        //El siguiente código obtiene todos los item almacenados en el ArrayList dataUrlsValues
+        /*for (int i = 0; i<dataUrlsValue.size();i++){
+            System.out.println("Array-data ["+i+"]: " +dataUrlsValue.get(i));
+        }*/
+        System.out.println(" Passed");
+
+        System.out.println("----------------------End---------------------");
     }
 
     @Test
@@ -106,9 +165,55 @@ public class eCommerceTarea {
 
         String body_response = response.getBody().prettyPrint();
         System.out.println("Response: " + body_response);
-        //System.out.println("Token: "+ access_token);
+        System.out.println("--------------------Tests---------------------");
 
+        System.out.print("Validar que el codigo de respuesta sea igual a 200: "+ response.getStatusCode());
+        //Evaluando el codigo de respuesta, usando  HttpStatus.
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        System.out.println(" Passed");
 
+        System.out.print("Validar que el estado de la respuesta sea igual a OK: "+ response.getStatusLine());
+        assertTrue(response.getStatusLine().contains("OK"));
+        System.out.println(" Passed");
+
+        long timeResponse = response.getTime();
+        System.out.print("Validar que el tiempo de respuesta sea menor a 3 segundo: "+ timeResponse);
+        assertTrue(timeResponse < 3000);
+        System.out.println(" Passed");
+
+        System.out.print("Validar que el body response no venga vacio: ");
+        assertNotNull(body_response);
+        System.out.println(" Passed");
+
+        System.out.print("Validar que el header response contenga el key Content-Type: ");
+        String headers_response = response.getHeaders().toString();
+        assertTrue(headers_response.contains("Content-Type"));
+        System.out.println(" Passed");
+
+        System.out.print("Validar que el body response contenga algunos campos: ");
+        assertTrue(body_response.contains("data"));
+        assertTrue(body_response.contains("list_id"));
+        assertTrue(body_response.contains("thumbnail"));
+        assertTrue(body_response.contains("subject"));
+        assertTrue(body_response.contains("prices"));
+        assertTrue(body_response.contains("code"));
+        assertTrue(body_response.contains("currency"));
+        assertTrue(body_response.contains("path"));
+        assertTrue(body_response.contains("locations"));
+        System.out.println(" Passed");
+
+        System.out.print("Validar que el valor de algunos campos del body response sean los esperados: ");
+        JsonPath jBodyResponse = response.jsonPath();
+        String dataItemslist_id = jBodyResponse.get("data.items[0].list_id");
+        String dataItemssubject = jBodyResponse.get("data.items[0].subject");
+        String dataPricesCurrency = jBodyResponse.get("data.items[0].prices[0].currency");
+        String dataLocation_label = jBodyResponse.get("data.items[0].locations[0].locations[0].locations[0].label");
+        assertEquals("/public/ads/939353617",dataItemslist_id);
+        assertEquals("RENAULT MEGANE SPORT RS ",dataItemssubject);
+        assertEquals("MXN",dataPricesCurrency);
+        assertEquals("Santa Cecilia Tepetlapa",dataLocation_label);
+        System.out.println(" Passed");
+        System.out.println("----------------------End---------------------");
     }
 
 
@@ -134,16 +239,48 @@ public class eCommerceTarea {
 
         access_token = jsonResponse.get("access_token");
         System.out.println("Token here: " + access_token);
-
         account_id = jsonResponse.get("account.account_id");
         System.out.println("Access ID here: " + account_id);
-
         uuid = jsonResponse.get("account.uuid");
         System.out.println("UUID here: " + uuid);
-
         String account_id_solo_local = account_id.substring(18);
         account_id_solo = account_id_solo_local;
         System.out.println("Account ID solo here: "+account_id_solo);
+
+
+        System.out.println("--------------------Tests---------------------");
+
+        System.out.print("Validar que el codigo de respuesta sea igual a 200: "+ response.getStatusCode());
+        //Evaluando el codigo de respuesta, usando  HttpStatus.
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        System.out.println(" Passed");
+
+        System.out.print("Validar que el estado de la respuesta sea igual a OK: "+ response.getStatusLine());
+        assertTrue(response.getStatusLine().contains("OK"));
+        System.out.println(" Passed");
+
+        long timeResponse = response.getTime();
+        System.out.print("Validar que el tiempo de respuesta sea menor a 3 segundo: "+ timeResponse);
+        assertTrue(timeResponse < 3000);
+        System.out.println(" Passed");
+
+        System.out.print("Validar que el body response no venga vacio: ");
+        assertNotNull(body_response);
+        System.out.println(" Passed");
+
+        System.out.print("Validar que el header response contenga el key Content-Type: ");
+        String headers_response = response.getHeaders().toString();
+        assertTrue(headers_response.contains("Content-Type"));
+        System.out.println(" Passed");
+
+        System.out.print("Validar que los valores de [access_token], [account_id], [uuid] y [account_id_solo] no sean nulos: ");
+        assertNotNull(access_token);
+        assertNotNull(account_id);
+        assertNotNull(uuid);
+        assertNotNull(account_id_solo);
+        System.out.println(" Passed");
+
+        System.out.println("----------------------End---------------------");
 
     }
 
